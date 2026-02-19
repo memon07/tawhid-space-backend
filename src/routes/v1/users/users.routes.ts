@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import { usersController } from '@controllers/users/users.controller';
+
+const usersRouter = Router();
+
+usersRouter.get('/', usersController.list);
+usersRouter.post('/onboarding', usersController.submitOnboarding);
+usersRouter.post('/user_onboarding', usersController.submitOnboarding);
+usersRouter.get('/:id', usersController.getById);
+usersRouter.patch('/:id', usersController.update);
+usersRouter.patch('/:id/onboarding', usersController.updateOnboarding);
+usersRouter.patch('/:id/active', usersController.updateActive);
+usersRouter.delete('/:id', usersController.remove);
+
+export { usersRouter };
