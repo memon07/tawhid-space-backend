@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "Tawhid Space Backend APIs",
+    "description": "Canonical API collection (no duplicate alias routes).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "a9d41153-76d5-4a63-8cd5-e36787a4d811"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiBase", "value": "{{baseUrl}}/api/v1" },
+    { "key": "phoneNumber", "value": "+14155550123" },
+    { "key": "password", "value": "Pass1234" },
+    { "key": "newPassword", "value": "Newpass88" },
+    { "key": "otpCode", "value": "123456" },
+    { "key": "userId", "value": "1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "passwordSetupToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Signup Flow",
+      "item": [
+        {
+          "name": "Request OTP (Signup)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"purpose\": \"signup\"\n}"
+            },
+            "url": "{{apiBase}}/auth/otp/request"
+          }
+        },
+        {
+          "name": "Verify OTP (Signup)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"otpCode\": \"{{otpCode}}\",\n  \"purpose\": \"signup\"\n}"
+            },
+            "url": "{{apiBase}}/auth/otp/verify"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data || {};",
+                  "if (data.passwordSetupToken) pm.collectionVariables.set('passwordSetupToken', data.passwordSetupToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save Password (Signup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{passwordSetupToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{apiBase}}/auth/save-password"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"password\": \"{{password}}\",\n  \"deviceInfo\": {\n    \"platform\": \"android\"\n  }\n}"
+            },
+            "url": "{{apiBase}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data || {};",
+                  "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);",
+                  "if (data.user && data.user.id) pm.collectionVariables.set('userId', String(data.user.id));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth - Forgot Password Flow",
+      "item": [
+        {
+          "name": "Request OTP (Reset)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"purpose\": \"reset_password\"\n}"
+            },
+            "url": "{{apiBase}}/auth/otp/request"
+          }
+        },
+        {
+          "name": "Verify OTP (Reset)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"otpCode\": \"{{otpCode}}\",\n  \"purpose\": \"reset_password\"\n}"
+            },
+            "url": "{{apiBase}}/auth/otp/verify"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data || {};",
+                  "if (data.passwordSetupToken) pm.collectionVariables.set('passwordSetupToken', data.passwordSetupToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save Password (Reset)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{passwordSetupToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{newPassword}}\"\n}"
+            },
+            "url": "{{apiBase}}/auth/save-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Session",
+      "item": [
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"deviceInfo\": {\n    \"platform\": \"android\"\n  }\n}"
+            },
+            "url": "{{apiBase}}/auth/token/refresh"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data || {};",
+                  "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{apiBase}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (Access Token Required)",
+      "item": [
+        {
+          "name": "Submit Onboarding",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferredLanguage\": \"en\",\n  \"fullName\": \"Ahmed Ali\",\n  \"age\": 27,\n  \"gender\": \"male\"\n}"
+            },
+            "url": "{{apiBase}}/users/onboarding"
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{apiBase}}/users?page=1&limit=20",
+              "host": ["{{apiBase}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{apiBase}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ahmed Ali\",\n  \"preferredLanguage\": \"en\",\n  \"gender\": \"male\",\n  \"birthDate\": \"1998-10-10\"\n}"
+            },
+            "url": "{{apiBase}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update User Onboarding Flag",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isOnboarded\": true\n}"
+            },
+            "url": "{{apiBase}}/users/{{userId}}/onboarding"
+          }
+        },
+        {
+          "name": "Update User Active Flag",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            },
+            "url": "{{apiBase}}/users/{{userId}}/active"
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{apiBase}}/users/{{userId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
