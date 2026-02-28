@@ -11,12 +11,8 @@ export const parseSubmitOnboardingBody = (body: unknown): SubmitOnboardingInput 
     throw new HttpError(400, 'Invalid request body');
   }
 
-  const { phoneNumber, preferredLanguage, fullName, birthDate, gender } = body;
+  const { preferredLanguage, fullName, birthDate, gender } = body;
   const age = body.age;
-
-  if (typeof phoneNumber !== 'string' || phoneNumber.trim().length === 0) {
-    throw new HttpError(400, 'phoneNumber is required');
-  }
 
   if (typeof preferredLanguage !== 'string' || preferredLanguage.trim().length === 0) {
     throw new HttpError(400, 'preferredLanguage is required');
@@ -43,7 +39,6 @@ export const parseSubmitOnboardingBody = (body: unknown): SubmitOnboardingInput 
   }
 
   return {
-    phoneNumber,
     preferredLanguage,
     fullName,
     birthDate,

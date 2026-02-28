@@ -14,8 +14,8 @@ export const parseLoginBody = (body: unknown): LoginInput => {
     throw new HttpError(400, 'phoneNumber is required');
   }
 
-  if (typeof password !== 'string' || password.length < 8) {
-    throw new HttpError(400, 'password must be at least 8 characters');
+  if (typeof password !== 'string' || password.length < 8 || password.length > 12) {
+    throw new HttpError(400, 'password must be between 8 and 12 characters');
   }
 
   if (deviceInfo !== undefined && !isRecord(deviceInfo)) {

@@ -21,7 +21,6 @@ export interface UpdateUserOnboardingInput {
 }
 
 export interface SubmitOnboardingInput {
-  phoneNumber: string;
   preferredLanguage: string;
   fullName: string;
   birthDate?: string;

@@ -49,9 +49,12 @@ export const env = {
     refreshExpiresIn: getString('JWT_REFRESH_EXPIRES_IN', '30d')
   },
   otp: {
-    expiryMinutes: getNumber('OTP_EXPIRY_MINUTES', 10),
+    expirySeconds: getNumber('OTP_EXPIRY_SECONDS', 90),
     length: getNumber('OTP_LENGTH', 6),
-    maxAttempts: getNumber('OTP_MAX_ATTEMPTS', 5)
+    maxAttempts: getNumber('OTP_MAX_ATTEMPTS', 3),
+    resendDelaySeconds: getNumber('OTP_RESEND_DELAY_SECONDS', 30),
+    maxPerHour: getNumber('OTP_MAX_PER_HOUR', 5),
+    verifiedSessionMinutes: getNumber('OTP_VERIFIED_SESSION_MINUTES', 10)
   }
 };
 

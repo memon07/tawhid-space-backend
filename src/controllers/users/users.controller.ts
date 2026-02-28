@@ -6,6 +6,8 @@ import { parseUpdateUserBody } from '@middleware/validation/schemas/users/update
 import { parseUpdateUserOnboardingBody } from '@middleware/validation/schemas/users/update-user-onboarding.schema';
 import { parseUpdateUserActiveBody } from '@middleware/validation/schemas/users/update-user-active.schema';
 import { parseSubmitOnboardingBody } from '@middleware/validation/schemas/users/submit-onboarding.schema';
+import { AuthenticatedRequest } from '@middleware/auth/require-auth.middleware';
+import { HttpError } from '@utils/http-error';
 
 export const usersController = {
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -73,8 +75,13 @@ export const usersController = {
 
   async submitOnboarding(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const authReq = req as AuthenticatedRequest;
+      const userId = authReq.auth?.userId;
+      if (!userId) {
+        throw new HttpError(401, 'Unauthorized');
+      }
       const payload = parseSubmitOnboardingBody(req.body);
-      const result = await usersService.submitOnboarding(payload);
+      const result = await usersService.submitOnboarding(userId, payload);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);

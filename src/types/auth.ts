@@ -19,7 +19,6 @@ export interface LoginInput {
 }
 
 export interface SavePasswordInput {
-  phoneNumber: string;
   password: string;
 }
 

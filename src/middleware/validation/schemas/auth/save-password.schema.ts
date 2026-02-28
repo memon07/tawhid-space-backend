@@ -7,18 +7,13 @@ export const parseSavePasswordBody = (body: unknown): SavePasswordInput => {
     throw new HttpError(400, 'Invalid request body');
   }
 
-  const { phoneNumber, password } = body;
+  const { password } = body;
 
-  if (typeof phoneNumber !== 'string' || phoneNumber.trim().length === 0) {
-    throw new HttpError(400, 'phoneNumber is required');
-  }
-
-  if (typeof password !== 'string' || password.length < 8) {
-    throw new HttpError(400, 'password must be at least 8 characters');
+  if (typeof password !== 'string' || password.length < 8 || password.length > 12) {
+    throw new HttpError(400, 'password must be between 8 and 12 characters');
   }
 
   return {
-    phoneNumber,
     password
   };
 };

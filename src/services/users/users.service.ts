@@ -6,7 +6,6 @@ import {
   UpdateUserInput,
   UpdateUserOnboardingInput
 } from '@/types/user';
-import { normalizePhoneE164 } from '@utils/phone';
 
 const deriveBirthDateFromAge = (age: number): string => {
   const now = new Date();
@@ -75,17 +74,10 @@ export const usersService = {
     }
   },
 
-  async submitOnboarding(payload: SubmitOnboardingInput) {
-    const phoneNumber = normalizePhoneE164(payload.phoneNumber);
-    const user = await userRepository.findByPhone(phoneNumber);
-
-    if (!user) {
-      throw new HttpError(404, 'User not found');
-    }
-
+  async submitOnboarding(userId: number, payload: SubmitOnboardingInput) {
     const birthDate = payload.birthDate ?? (payload.age ? deriveBirthDateFromAge(payload.age) : null);
 
-    const updatedUser = await userRepository.completeOnboarding(user.id, {
+    const updatedUser = await userRepository.completeOnboarding(userId, {
       preferredLanguage: payload.preferredLanguage,
       fullName: payload.fullName,
       birthDate,

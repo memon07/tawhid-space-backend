@@ -51,6 +51,24 @@ export const otpRepository = {
     });
   },
 
+  async findLatestOtpByPhone(phoneNumber: string): Promise<OtpVerification | null> {
+    return OtpVerification.findOne({
+      where: { phoneNumber },
+      order: [['createdAt', 'DESC']]
+    });
+  },
+
+  async countByPhoneSince(phoneNumber: string, from: Date): Promise<number> {
+    return OtpVerification.count({
+      where: {
+        phoneNumber,
+        createdAt: {
+          [Op.gte]: from
+        }
+      }
+    });
+  },
+
   async consumeOtp(id: number, userId?: number): Promise<void> {
     await OtpVerification.update(
       {
@@ -62,7 +80,18 @@ export const otpRepository = {
     );
   },
 
-  async incrementAttempts(id: number): Promise<void> {
+  async incrementAttempts(id: number): Promise<number> {
     await OtpVerification.increment('attemptCount', { by: 1, where: { id } });
+    const updated = await OtpVerification.findByPk(id);
+    return updated?.attemptCount ?? 0;
+  },
+
+  async invalidateOtp(id: number): Promise<void> {
+    await OtpVerification.update(
+      {
+        isUsed: true
+      },
+      { where: { id } }
+    );
   }
 };

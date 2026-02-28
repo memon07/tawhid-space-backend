@@ -13,8 +13,8 @@ export const parseVerifyOtpBody = (body: unknown): VerifyOtpInput => {
     throw new HttpError(400, 'phoneNumber is required');
   }
 
-  if (typeof otpCode !== 'string' || !/^\d{4,8}$/.test(otpCode)) {
-    throw new HttpError(400, 'otpCode must be numeric');
+  if (typeof otpCode !== 'string' || !/^\d{6}$/.test(otpCode)) {
+    throw new HttpError(400, 'otpCode must be a 6-digit numeric code');
   }
 
   if (typeof purpose !== 'string' || !allowedPurposes.includes(purpose as VerifyOtpInput['purpose'])) {
