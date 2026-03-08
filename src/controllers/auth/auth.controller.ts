@@ -6,8 +6,8 @@ import { parseRefreshTokenBody } from '@middleware/validation/schemas/auth/refre
 import { parseRequestOtpBody } from '@middleware/validation/schemas/auth/request-otp.schema';
 import { parseSavePasswordBody } from '@middleware/validation/schemas/auth/save-password.schema';
 import { parseVerifyOtpBody } from '@middleware/validation/schemas/auth/verify-otp.schema';
+import { AuthenticatedRequest } from '@middleware/auth/require-auth.middleware';
 import { HttpError } from '@utils/http-error';
-import { PasswordSetupAuthenticatedRequest } from '@middleware/auth/require-password-setup-token.middleware';
 
 export const authController = {
   async requestOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -42,14 +42,13 @@ export const authController = {
 
   async savePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const setupReq = req as PasswordSetupAuthenticatedRequest;
-      const userId = setupReq.passwordSetup?.userId;
-      const purpose = setupReq.passwordSetup?.purpose;
-      if (!userId || !purpose) {
-        throw new HttpError(401, 'Password setup token is required');
+      const authReq = req as AuthenticatedRequest;
+      const userId = authReq.auth?.userId;
+      if (!userId) {
+        throw new HttpError(401, 'Unauthorized');
       }
       const payload = parseSavePasswordBody(req.body);
-      const result = await authService.savePassword(userId, purpose, payload);
+      const result = await authService.savePassword(userId, payload);
       res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);

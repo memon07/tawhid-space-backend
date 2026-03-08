@@ -1,5 +1,4 @@
 import { env, isProduction } from '@config/env';
-import jwt from 'jsonwebtoken';
 import { otpRepository } from '@repositories/otp.repository';
 import { userRepository } from '@repositories/user.repository';
 import { LoginInput, OtpPurpose, RequestOtpInput, SavePasswordInput, VerifyOtpInput } from '@/types/auth';
@@ -132,31 +131,15 @@ export const authService = {
 
     const user = await ensureUserForPurpose(phoneNumber, payload.purpose);
     await otpRepository.consumeOtp(record.id, user.id);
-
-    if (payload.purpose === 'login') {
-      await userRepository.updateLastLogin(user.id);
-      const tokens = await tokenService.issueTokens(user.id, payload.deviceInfo);
-
-      return {
-        user: buildUserPayload(user),
-        onboarding: user.isOnboarded,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken
-      };
-    }
-
-    const passwordSetupToken = jwt.sign(
-      { sub: user.id, typ: 'password_setup', purpose: payload.purpose },
-      env.jwt.accessSecret,
-      { expiresIn: `${env.otp.verifiedSessionMinutes}m` }
-    );
+    await userRepository.updateLastLogin(user.id);
+    const tokens = await tokenService.issueTokens(user.id, payload.deviceInfo);
 
     return {
-      otpVerified: true,
       purpose: payload.purpose,
-      requiresPasswordSetup: true,
-      verificationWindowSeconds: env.otp.verifiedSessionMinutes * 60,
-      passwordSetupToken
+      user: buildUserPayload(user),
+      onboarding: user.isOnboarded,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken
     };
   },
 
@@ -188,23 +171,15 @@ export const authService = {
     };
   },
 
-  async savePassword(
-    userId: number,
-    purpose: 'signup' | 'reset_password',
-    payload: SavePasswordInput
-  ): Promise<{ accountCreated: boolean; forgotSuccess: boolean }> {
+  async savePassword(userId: number, payload: SavePasswordInput): Promise<{ accountCreated: boolean; forgotSuccess: boolean }> {
     const user = await userRepository.findById(userId);
     if (!user) {
       throw new HttpError(404, 'User not found');
     }
 
-    const recentVerifiedOtp = await otpRepository.findLatestVerified(user.phoneNumber, purpose);
+    const recentVerifiedOtp = await otpRepository.findLatestVerifiedForPasswordSetup(user.phoneNumber);
     if (!recentVerifiedOtp?.verifiedAt) {
-      if (purpose === 'signup') {
-        throw new HttpError(401, 'Signup OTP verification required');
-      }
-
-      throw new HttpError(401, 'Forgot-password OTP verification required');
+      throw new HttpError(401, 'Signup or forgot-password OTP verification required');
     }
 
     const verifiedWithinMs = Date.now() - new Date(recentVerifiedOtp.verifiedAt).getTime();
@@ -215,6 +190,7 @@ export const authService = {
 
     const passwordHash = hashPassword(payload.password);
     await userRepository.setPassword(user.id, passwordHash);
+    const purpose = recentVerifiedOtp.purpose;
 
     return {
       accountCreated: purpose === 'signup',

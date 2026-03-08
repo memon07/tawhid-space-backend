@@ -51,6 +51,22 @@ export const otpRepository = {
     });
   },
 
+  async findLatestVerifiedForPasswordSetup(phoneNumber: string): Promise<OtpVerification | null> {
+    return OtpVerification.findOne({
+      where: {
+        phoneNumber,
+        purpose: {
+          [Op.in]: ['signup', 'reset_password']
+        },
+        isUsed: true,
+        verifiedAt: {
+          [Op.ne]: null
+        }
+      },
+      order: [['createdAt', 'DESC']]
+    });
+  },
+
   async findLatestOtpByPhone(phoneNumber: string): Promise<OtpVerification | null> {
     return OtpVerification.findOne({
       where: { phoneNumber },
